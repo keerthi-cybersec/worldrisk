@@ -365,7 +365,7 @@
     cursor: pointer;
     color-scheme: dark;
   "
-/>  
+/>
 <div class="segmented" id="range-toggle">
     <button class="active" data-range="30d">Last 30 Days</button>
   </div>
@@ -450,16 +450,17 @@
     (item.tags || []).some(t => t.toLowerCase().includes(q))
   );
   function matchesCalendar(item) {
-  if (!calendarDate) return true;
-  const d = parseDate(item.published);
-  if (!d) return false;
-  const itemDate = d.toISOString().split('T')[0];
-  return itemDate === calendarDate;
+    if (!calendarDate) return true;
+    const d = parseDate(item.published);
+    if (!d) return false;
+    // Compare in local date to avoid timezone issues
+    const itemDate = d.toLocaleDateString('en-CA'); // gives YYYY-MM-DD
+    return itemDate === calendarDate;
   }
   }
   function matchesRange(item) {
-    if (activeRange === 'today') return isToday(item.published);
-    return true; // '30d' — dataset is already retained to the last 30 days
+    if (calendarDate) return true; // calendar filter takes over
+    return true; // last 30 days is always the default
   }
 
   function renderStats() {
@@ -592,8 +593,14 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
 
   document.getElementById('calendar-filter').addEventListener('change', (e) => {
-  calendarDate = e.target.value;
-  renderAll();
+    calendarDate = e.target.value;
+    if (calendarDate) {
+      // hide Last 30 Days button visual when date selected
+      document.getElementById('range-toggle').style.opacity = '0.4';
+    } else {
+      document.getElementById('range-toggle').style.opacity = '1';
+    }
+    renderAll();
   });
   document.getElementById('search-input').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
@@ -619,6 +626,13 @@
     .then(r => r.json())
     .then(payload => {
       allItems = payload.items || [];
+      // Set calendar min/max to last 30 days only
+      const today = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      const calInput = document.getElementById('calendar-filter');
+      calInput.max = today.toISOString().split('T')[0];
+      calInput.min = thirtyDaysAgo.toISOString().split('T')[0];
       const updated = new Date(payload.generated_at);
       document.getElementById('updated-line').textContent =
         'LIVE · updated ' + (isNaN(updated) ? payload.generated_at : updated.toLocaleString())
