@@ -350,7 +350,23 @@
     outline: none;
   "
 />
-  <div class="segmented" id="range-toggle">
+<input 
+  type="date" 
+  id="calendar-filter"
+  style="
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 0.45rem 0.8rem;
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+    color-scheme: dark;
+  "
+/>  
+<div class="segmented" id="range-toggle">
     <button class="active" data-range="30d">Last 30 Days</button>
   </div>
   <div class="filters" id="filters">
@@ -388,6 +404,7 @@
 <script>
   let activeType = 'all';
   let searchQuery = '';
+  let calendarDate = '';
   let activeRange = '30d';
   let allItems = [];
 
@@ -432,6 +449,13 @@
     (item.cve_id || '').toLowerCase().includes(q) ||
     (item.tags || []).some(t => t.toLowerCase().includes(q))
   );
+  function matchesCalendar(item) {
+  if (!calendarDate) return true;
+  const d = parseDate(item.published);
+  if (!d) return false;
+  const itemDate = d.toISOString().split('T')[0];
+  return itemDate === calendarDate;
+  }
   }
   function matchesRange(item) {
     if (activeRange === 'today') return isToday(item.published);
@@ -456,7 +480,7 @@
   function renderColumn(containerId, countId, track) {
     const container = document.getElementById(containerId);
     const items = allItems.filter(it =>
-      it.track === track && matchesRange(it) && matchesSearch(it) && (activeType === 'all' || it.item_type === activeType)
+      it.track === track && matchesRange(it) && matchesSearch(it) && matchesCalendar(it) && (activeType === 'all' || it.item_type === activeType)
     );
     document.getElementById(countId).textContent = items.length + ' item' + (items.length === 1 ? '' : 's');
 
@@ -567,6 +591,10 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
 
+  document.getElementById('calendar-filter').addEventListener('change', (e) => {
+  calendarDate = e.target.value;
+  renderAll();
+  });
   document.getElementById('search-input').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
   renderAll();
