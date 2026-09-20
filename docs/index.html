@@ -440,15 +440,16 @@
   }
 
   function matchesSearch(item) {
-  if (!searchQuery) return true;
-  const q = searchQuery.toLowerCase();
-  return (
-    (item.title || '').toLowerCase().includes(q) ||
-    (item.description || '').toLowerCase().includes(q) ||
-    (item.source || '').toLowerCase().includes(q) ||
-    (item.cve_id || '').toLowerCase().includes(q) ||
-    (item.tags || []).some(t => t.toLowerCase().includes(q))
-  );
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (item.title || '').toLowerCase().includes(q) ||
+      (item.description || '').toLowerCase().includes(q) ||
+      (item.source || '').toLowerCase().includes(q) ||
+      (item.cve_id || '').toLowerCase().includes(q) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
   function matchesCalendar(item) {
     if (!calendarDate) return true;
     const d = parseDate(item.published);
@@ -457,7 +458,7 @@
     const itemDate = d.toLocaleDateString('en-CA'); // gives YYYY-MM-DD
     return itemDate === calendarDate;
   }
-  }
+  
   function matchesRange(item) {
     if (calendarDate) return true; // calendar filter takes over
     return true; // last 30 days is always the default
