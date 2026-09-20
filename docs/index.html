@@ -334,6 +334,22 @@
 </header>
 
 <div class="controls">
+  <input 
+  type="text" 
+  id="search-input" 
+  placeholder="Search threats, CVEs, sources..." 
+  style="
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 0.45rem 1rem;
+    border-radius: 5px;
+    width: 280px;
+    outline: none;
+  "
+/>
   <div class="segmented" id="range-toggle">
     <button class="active" data-range="30d">Last 30 Days</button>
   </div>
@@ -371,6 +387,7 @@
 
 <script>
   let activeType = 'all';
+  let searchQuery = '';
   let activeRange = '30d';
   let allItems = [];
 
@@ -405,6 +422,17 @@
     return 'var(--sev-low)';
   }
 
+  function matchesSearch(item) {
+  if (!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  return (
+    (item.title || '').toLowerCase().includes(q) ||
+    (item.description || '').toLowerCase().includes(q) ||
+    (item.source || '').toLowerCase().includes(q) ||
+    (item.cve_id || '').toLowerCase().includes(q) ||
+    (item.tags || []).some(t => t.toLowerCase().includes(q))
+  );
+  }
   function matchesRange(item) {
     if (activeRange === 'today') return isToday(item.published);
     return true; // '30d' — dataset is already retained to the last 30 days
@@ -428,7 +456,7 @@
   function renderColumn(containerId, countId, track) {
     const container = document.getElementById(containerId);
     const items = allItems.filter(it =>
-      it.track === track && matchesRange(it) && (activeType === 'all' || it.item_type === activeType)
+      it.track === track && matchesRange(it) && matchesSearch(it) && (activeType === 'all' || it.item_type === activeType)
     );
     document.getElementById(countId).textContent = items.length + ' item' + (items.length === 1 ? '' : 's');
 
@@ -539,6 +567,10 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
 
+  document.getElementById('search-input').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  renderAll();
+  });
   document.getElementById('filters').addEventListener('click', (e) => {
     if (!e.target.matches('.filter-btn')) return;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
