@@ -462,9 +462,12 @@
   return itemDate === calendarDate;
 }
   function matchesRange(item) {
-    if (calendarDate) return true; // calendar filter takes over
-    return true; // last 30 days is always the default
-  }
+  if (calendarDate) return true;
+  // Filter out future dates
+  var d = parseDate(item.published);
+  if (!d) return true;
+  return d <= new Date();
+}
 
   function renderStats() {
     const inRange = allItems.filter(matchesRange);
