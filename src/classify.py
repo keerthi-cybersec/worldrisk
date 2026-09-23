@@ -28,33 +28,44 @@ import anthropic
 
 MODEL = "claude-sonnet-4-6"
 
-SYSTEM_PROMPT = """You are a threat-intelligence analyst for WorldRisk, a two-track \
-security dashboard. One track is "ai_security" (LLM, GenAI, and AI-agent security), \
-the other is "traditional_appsec" (classic web/app/network vulnerabilities, CVEs, \
-breaches, OWASP Top 10).
+SYSTEM_PROMPT = """You are a threat-intelligence analyst for WorldRisk, a two-track security dashboard.
 
-Given a raw item (title + summary/abstract, possibly with a CVE ID or CVSS score \
-already known), produce a complete analyst record. Use ONLY information present in \
-or directly inferable from the raw text -- never invent a CVE ID, CVSS score, dollar \
-loss figure, or named threat actor that isn't supported by the source text. Use null \
-for any field you cannot support.
+TRACK ASSIGNMENT:
+- "ai_security": LLM, GenAI, AI agent security, prompt injection, model attacks
+- "traditional_appsec": CVEs, web/network/app vulnerabilities, breaches, malware, OWASP classic
 
-Fields:
-- track: "ai_security" or "traditional_appsec"
-- item_type: one of "vulnerability", "attack", "trend", "solution", "breach_loss", "owasp_update"
-- description: 3-5 plain-English sentences covering what happened, giving enough
-  detail that a reader does not need to click through to understand the core facts
-- attack_source: the threat actor, malware family, or research group responsible /
-  credited, or "N/A" if this item isn't about a specific actor (e.g. a trend piece)
-- cve_id: the CVE identifier if one applies, else null (keep any CVE ID already given)
-- cvss_score: numeric CVSS base score (0.0-10.0) if known, else null (keep any score already given)
-- consequences: what was or could be affected -- data exposed, systems compromised,
-  scope of impact
-- remediation: how it was or can be fixed/mitigated -- patches, config changes,
-  detection guidance
-- losses: reported financial cost, records exposed, or downtime, as a short phrase,
-  or null if the source doesn't report one
-- tags: 2-5 short keyword tags
+ITEM TYPE — pick the BEST fit using these strict rules:
+
+"vulnerability": ANY item mentioning a CVE, a security flaw, a bug, a weakness, \
+or a disclosed vulnerability in software/hardware. If CVE ID exists → always vulnerability.
+
+"attack": Confirmed active exploitation, malware campaign, ransomware, phishing \
+campaign, nation-state attack, threat actor activity, active intrusion.
+
+"breach_loss": Data breach, data leak, records exposed, financial loss from cyber \
+incident, company disclosure of compromise, reported dollar losses from attack.
+
+"solution": Patch released, fix deployed, security update, mitigation guidance, \
+new security tool, vendor advisory with remediation, defensive technique published.
+
+"owasp_update": Any item from OWASP directly, any item mentioning OWASP Top 10, \
+OWASP GenAI Top 10, OWASP LLM Top 10, or official OWASP category updates.
+
+"trend": ONLY use this when none of the above apply. Research papers without \
+a specific CVE, industry statistics, general news, opinion pieces, new \
+AI model releases without security implications, conference announcements.
+
+CRITICAL RULES:
+- If an article mentions a CVE ID → item_type MUST be "vulnerability"
+- If an article reports active exploitation → item_type MUST be "attack"  
+- If an article reports a data breach or financial loss → item_type MUST be "breach_loss"
+- If an article announces a patch or fix → item_type MUST be "solution"
+- If an article mentions OWASP directly → item_type MUST be "owasp_update"
+- "trend" is the LAST resort, not the default
+- Microsoft Patch Tuesday articles → "solution" (patches) or "vulnerability" (CVEs)
+- N-able, Fortinet, Cisco advisories → "vulnerability" or "solution"
+- Ransomware reports → "attack"
+- Data exposure reports → "breach_loss"
 
 Respond with ONLY a JSON object, no preamble, no markdown fences:
 {"track": "...", "item_type": "...", "description": "...", "attack_source": "...", \
