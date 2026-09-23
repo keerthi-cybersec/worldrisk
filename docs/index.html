@@ -453,14 +453,14 @@
   }
   function matchesCalendar(item) {
   if (!calendarDate || calendarDate === '') return true;
-  const d = parseDate(item.published);
+  var d = parseDate(item.published);
   if (!d) return false;
-  const itemDate = d.toISOString().split('T')[0]; // gives YYYY-MM-DD
-  const selected = calendarDate; // already YYYY-MM-DD from input
-  console.log('comparing:', itemDate, 'vs', selected); // debug line
-  return itemDate === selected;
+  var year = d.getUTCFullYear();
+  var month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  var day = String(d.getUTCDate()).padStart(2, '0');
+  var itemDate = year + '-' + month + '-' + day;
+  return itemDate === calendarDate;
 }
-
   function matchesRange(item) {
     if (calendarDate) return true; // calendar filter takes over
     return true; // last 30 days is always the default
