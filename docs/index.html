@@ -452,13 +452,14 @@
     );
   }
   function matchesCalendar(item) {
-    if (!calendarDate) return true;
-    const d = parseDate(item.published);
-    if (!d) return false;
-    // Compare in local date to avoid timezone issues
-    
-    return itemDate === calendarDate;
-  }
+  if (!calendarDate || calendarDate === '') return true;
+  const d = parseDate(item.published);
+  if (!d) return false;
+  const itemDate = d.toISOString().split('T')[0]; // gives YYYY-MM-DD
+  const selected = calendarDate; // already YYYY-MM-DD from input
+  console.log('comparing:', itemDate, 'vs', selected); // debug line
+  return itemDate === selected;
+}
 
   function matchesRange(item) {
     if (calendarDate) return true; // calendar filter takes over
