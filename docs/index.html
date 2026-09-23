@@ -456,7 +456,7 @@
     const d = parseDate(item.published);
     if (!d) return false;
     // Compare in local date to avoid timezone issues
-    const itemDate = d.toISOString().split('T')[0];
+    
     return itemDate === calendarDate;
   }
 
@@ -596,12 +596,6 @@
 
   document.getElementById('calendar-filter').addEventListener('change', (e) => {
     calendarDate = e.target.value;
-    if (calendarDate) {
-      // hide Last 30 Days button visual when date selected
-      document.getElementById('range-toggle').style.opacity = '0.4';
-    } else {
-      document.getElementById('range-toggle').style.opacity = '1';
-    }
     renderAll();
   });
   document.getElementById('search-input').addEventListener('input', (e) => {
@@ -621,6 +615,8 @@
     document.querySelectorAll('#range-toggle button').forEach(b => b.classList.remove('active'));
     e.target.classList.add('active');
     activeRange = e.target.dataset.range;
+    calendarDate = '';
+    document.getElementById('calendar-filter').value = '';
     renderAll();
   });
 
